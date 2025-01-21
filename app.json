@@ -13,7 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.eshalimoon.foodloggerfrontend"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,6 +25,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "690cf2be-80ea-496f-b242-5c53d90ec5f3"
+      }
     }
   }
 }
