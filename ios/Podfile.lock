@@ -11,9 +11,15 @@ PODS:
     - ExpoModulesCore
   - EXFont (11.4.0):
     - ExpoModulesCore
+  - EXImageLoader (4.3.0):
+    - ExpoModulesCore
+    - React-Core
   - Expo (49.0.23):
     - ExpoModulesCore
   - ExpoDevice (5.4.0):
+    - ExpoModulesCore
+  - ExpoImageManipulator (11.3.0):
+    - EXImageLoader
     - ExpoModulesCore
   - ExpoKeepAwake (12.3.0):
     - ExpoModulesCore
@@ -458,8 +464,10 @@ DEPENDENCIES:
   - EXConstants (from `../node_modules/expo-constants/ios`)
   - EXFileSystem (from `../node_modules/expo-file-system/ios`)
   - EXFont (from `../node_modules/expo-font/ios`)
+  - EXImageLoader (from `../node_modules/expo-image-loader/ios`)
   - Expo (from `../node_modules/expo`)
   - ExpoDevice (from `../node_modules/expo-device/ios`)
+  - ExpoImageManipulator (from `../node_modules/expo-image-manipulator/ios`)
   - ExpoKeepAwake (from `../node_modules/expo-keep-awake/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -523,10 +531,14 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-file-system/ios"
   EXFont:
     :path: "../node_modules/expo-font/ios"
+  EXImageLoader:
+    :path: "../node_modules/expo-image-loader/ios"
   Expo:
     :path: "../node_modules/expo"
   ExpoDevice:
     :path: "../node_modules/expo-device/ios"
+  ExpoImageManipulator:
+    :path: "../node_modules/expo-image-manipulator/ios"
   ExpoKeepAwake:
     :path: "../node_modules/expo-keep-awake/ios"
   ExpoModulesCore:
@@ -614,8 +626,10 @@ SPEC CHECKSUMS:
   EXConstants: e7d8d1bec9a20242b4f92a9d66967c3904e0dcd0
   EXFileSystem: 1aeed803248e2b62c5cde8b8d8c6cb1525fc40c1
   EXFont: aa39b3f790e2b3188986ac5e8684cf6003c00a18
+  EXImageLoader: 2c79db9355756be7494a2257648235ee47dc0f9c
   Expo: 7bde63b84d4f6502de1e7963182333f39bedbf94
   ExpoDevice: 0333baa899c09213c1c6cb3d1a1b2061fb00594c
+  ExpoImageManipulator: 9360f6277cb4c06152980b0e70e0066e838213e7
   ExpoKeepAwake: 8ab1087501f5ccb91146447756b787575b13f13e
   ExpoModulesCore: 3312621274fbba06fe382a37d8218a43cd522823
   FBLazyVector: 66398fc2381d8fa1eee4c0f80d931587a7b927e8
