@@ -1,108 +1,61 @@
-import React, { useRef, useState, useEffect } from "react";
-import { Text, View, Button, StyleSheet, ActivityIndicator, Alert } from "react-native";
-import { Camera } from "expo-camera";
-import * as ImageManipulator from "expo-image-manipulator";
-
+import React, { useRef, useState, useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Camera } from 'expo-camera';
+import CameraOverlay from '../components/CameraOverlay';
+import CaptureButton from '../components/CaptureButton';
+import { sendPhotoToBackend } from '../services/apiService';
 
 export default function CameraScreen() {
   const [hasPermission, setHasPermission] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [caloriesLeft, setCaloriesLeft] = useState(2000); // Placeholder
   const cameraRef = useRef(null);
 
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === "granted");
+      setHasPermission(status === 'granted');
     })();
   }, []);
 
-  const compressPhoto = async (photoUri) => {
-      const manipulatedImage = await ImageManipulator.manipulateAsync(
-          photoUri,
-          [{ resize: { width: 800 } }], // Resize to 800px width
-          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
-      );
-      return manipulatedImage.uri;
-  };
-  
-  const takePhoto = async () => {
-      if (!cameraRef.current) return;
-  
-      setIsLoading(true);
-      try {
-          const photo = await cameraRef.current.takePictureAsync();
-          const compressedPhotoUri = await compressPhoto(photo.uri);
-  
-          const formData = new FormData();
-          formData.append("photo", {
-              uri: compressedPhotoUri,
-              type: "image/jpeg",
-              name: "photo.jpg",
-          });
-  
-          const response = await fetch("http://192.168.1.38:3000/api/vision", {
-              method: "POST",
-              body: formData,
-              headers: {
-                  "Content-Type": "multipart/form-data",
-              },
-          });
-  
-          const result = await response.json();
-          Alert.alert("Analysis Result", result.analysis || "No data returned.");
-      } catch (error) {
-          console.error("Error taking photo or sending to backend:", error);
-          Alert.alert("Error", "Failed to process the photo.");
-      } finally {
-          setIsLoading(false);
-      }
+  const handleCapture = async () => {
+    if (!cameraRef.current) return;
+
+    setIsLoading(true);
+    try {
+      const photo = await cameraRef.current.takePictureAsync();
+      const result = await sendPhotoToBackend(photo.uri);
+
+      const calories = result.calories || 0; // Adjust based on backend
+      setCaloriesLeft((prev) => prev - calories);
+    } catch (error) {
+      console.error('Error capturing photo:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  if (hasPermission === null) return null;
 
-  if (hasPermission === null) {
-    return (
-      <View style={styles.messageContainer}>
-        <Text>Requesting camera permission...</Text>
-      </View>
-    );
-  }
-
-  if (hasPermission === false) {
-    return (
-      <View style={styles.messageContainer}>
-        <Text>No access to camera. Please enable it in your device settings.</Text>
-      </View>
-    );
-  }
+  if (hasPermission === false)
+    return <View><Text>No access to camera</Text></View>;
 
   return (
-    <View style={styles.cameraContainer}>
-      <Camera style={styles.camera} ref={cameraRef} />
-      {isLoading ? (
-        <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
-      ) : (
-        <Button title="Take Photo" onPress={takePhoto} />
-      )}
+    <View style={styles.container}>
+      <Camera style={styles.camera} ref={cameraRef}>
+        <CameraOverlay caloriesLeft={caloriesLeft} />
+        <CaptureButton isLoading={isLoading} onCapture={handleCapture} />
+      </Camera>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  cameraContainer: {
+  container: {
     flex: 1,
-    width: "100%",
   },
   camera: {
     flex: 1,
-  },
-  messageContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loader: {
-    position: "absolute",
-    bottom: 20,
-    alignSelf: "center",
+    justifyContent: 'space-between',
   },
 });
