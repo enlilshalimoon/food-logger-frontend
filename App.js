@@ -6,9 +6,10 @@ export default function App() {
   const [response, setResponse] = useState('');
   const [showCamera, setShowCamera] = useState(false); // Toggle between test screen and camera
 
+  // Test message function
   const sendTestMessage = async () => {
     try {
-      const res = await fetch('http://192.168.1.168:3001/vision', {
+      const res = await fetch('http://192.168.1.38:3000/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: 'Hello from Expo!' }),
@@ -16,15 +17,16 @@ export default function App() {
       const data = await res.json();
       setResponse(data.response);
     } catch (error) {
-      console.error(error);
+      console.error('Error sending test message:', error);
     }
   };
 
+  // Render the CameraScreen if `showCamera` is true
   if (showCamera) {
-    // Render CameraScreen if `showCamera` is true
     return <CameraScreen />;
   }
 
+  // Default screen
   return (
     <View style={{ marginTop: 50, padding: 20 }}>
       <Button title="Send Test Message" onPress={sendTestMessage} />
