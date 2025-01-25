@@ -1,15 +1,28 @@
-import * as FileSystem from "expo-file-system";
+import axios from "axios";
+import getEnvVars from "../env";
+import * as FileSystem from 'expo-file-system';
+
+const { BASE_URL } = getEnvVars(); // Dynamically get the base URL
+export const calculateMacros = async (responses) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/api/calculate-macros`, {
+      responses,
+    });
+    return response.data; // Return the API response
+  } catch (error) {
+    console.error('Error in calculateMacros API:', error.response?.data || error.message);
+    throw error;
+  }
+};
 
 export const sendPhotoToBackend = async (photoUri) => {
   try {
-    // Validate file existence
     const fileInfo = await FileSystem.getInfoAsync(photoUri);
     console.log("File info in sendPhotoToBackend:", fileInfo);
     if (!fileInfo.exists) {
       throw new Error("Photo file does not exist: " + photoUri);
     }
 
-    // Prepare form data
     const formData = new FormData();
     formData.append("photo", {
       uri: photoUri,
@@ -19,8 +32,7 @@ export const sendPhotoToBackend = async (photoUri) => {
 
     console.log("Sending photo to backend...");
 
-    // Send the photo to the backend
-    const response = await fetch("http://192.168.1.38:3000/api/vision", {
+    const response = await fetch(`${BASE_URL}/api/vision`, {
       method: "POST",
       body: formData,
       headers: {
@@ -28,7 +40,6 @@ export const sendPhotoToBackend = async (photoUri) => {
       },
     });
 
-    // Log response for debugging
     console.log("Backend response status:", response.status);
     if (!response.ok) {
       throw new Error(`Server responded with status: ${response.status}`);

@@ -4,8 +4,11 @@ import { Camera } from 'expo-camera';
 import CameraOverlay from '../components/CameraOverlay';
 import CaptureButton from '../components/CaptureButton';
 import { sendPhotoToBackend } from '../services/apiService';
+import * as FileSystem from 'expo-file-system';
 
-export default function CameraScreen() {
+
+
+export default function CameraScreen({ navigation }) {
   const [hasPermission, setHasPermission] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [caloriesLeft, setCaloriesLeft] = useState(2000); // Placeholder
@@ -23,31 +26,42 @@ export default function CameraScreen() {
 
     setIsLoading(true);
     try {
-        // Capture the photo
-        const photo = await cameraRef.current.takePictureAsync();
-        console.log("Captured photo URI:", photo.uri);
+      // Capture photo
+      const photo = await cameraRef.current.takePictureAsync();
+      console.log("Captured photo URI:", photo.uri);
 
-        // Send the photo to the backend
-        const result = await sendPhotoToBackend(photo.uri);
-        console.log("Backend response:", result);
+      // Navigate to LoggingScreen with a loading state
+      navigation.navigate('LoggingScreen', {
+        loading: true,
+      });
 
-        const { name, calories, macros } = result;
-        Alert.alert(
-            "Food Analysis",
-            `Food: ${name}\nCalories: ${calories}\nCarbs: ${macros.carbs}g\nProtein: ${macros.protein}g\nFats: ${macros.fats}g`
-        );
+      // Send photo to the backend
+      const result = await sendPhotoToBackend(photo.uri);
+      console.log("Backend response:", result);
+
+      // Navigate back to LoggingScreen with the backend response
+      navigation.navigate('LoggingScreen', {
+        loading: false,
+        name: result.name,
+        calories: result.calories,
+        macros: result.macros,
+      });
     } catch (error) {
-        console.error("Error capturing photo:", error);
-        Alert.alert("Error", error.message || "Failed to process the photo.");
+      console.error("Error capturing photo:", error);
+      Alert.alert("Error", error.message || "Failed to process the photo.");
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
-};
+  };
 
   if (hasPermission === null) return null;
 
   if (hasPermission === false)
-    return <View><Text>No access to camera</Text></View>;
+    return (
+      <View>
+        <Text>No access to camera</Text>
+      </View>
+    );
 
   return (
     <View style={styles.container}>

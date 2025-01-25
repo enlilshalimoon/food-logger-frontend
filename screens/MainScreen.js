@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient'; // Use this for Expo projects
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { AppContext } from '../context/AppContext'; // Correct import of AppContext
 
 export default function MainScreen({ navigation }) {
+  const { state } = useContext(AppContext); // Access state from context
+  const { macros, caloriesLeft } = state; // Destructure relevant properties
+
   return (
     <LinearGradient colors={['#E3FDFD', '#C9E9F8']} style={styles.container}>
       {/* Header */}
@@ -19,7 +23,9 @@ export default function MainScreen({ navigation }) {
 
       {/* Calorie Counter */}
       <View style={styles.calorieCounter}>
-        <Text style={styles.caloriesText}>2000 cal left</Text>
+        <Text style={styles.caloriesText}>
+          {caloriesLeft || macros?.calories || 0} cal left
+        </Text>
       </View>
 
       {/* Camera Button */}
