@@ -1,9 +1,9 @@
 const ENV = {
     development: {
-      BASE_URL: "http://192.168.1.38:3000", // Replace with your dev server's IP
+      BASE_URL: "http://34.133.139.84:3000", // Replace with your dev server's IP
     },
     production: {
-      BASE_URL: "https://your-production-server.com", // Replace with your production URL
+      BASE_URL: "http://34.133.139.84:3000", // Replace with your production URLß
     },
   };
   

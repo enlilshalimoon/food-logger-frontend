@@ -8,13 +8,18 @@ export default function LoggingScreen({ route, navigation }) {
 
   // Handle Log button
   const handleLog = () => {
-    if (!calories) {
-      Alert.alert("Error", "No food data to log.");
+    if (!calories || !macros) {
+      Alert.alert("Error", "Incomplete food data to log.");
       return;
     }
-
-    const updatedCaloriesLeft = 2000 - calories; // Replace 2000 with your dynamic value
-    navigation.navigate('MainScreen', { caloriesLeft: updatedCaloriesLeft });
+    console.log("Logging food:", { name, calories, macros });
+    navigation.navigate("MainScreen", {
+      newFood: {
+        name: name || "Unknown Food",
+        calories: calories,
+        macros: macros,
+      },
+    });
   };
 
   return (

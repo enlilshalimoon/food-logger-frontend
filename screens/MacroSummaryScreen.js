@@ -27,6 +27,7 @@ export default function MacroSummaryScreen({ navigation }) {
 
         // Dispatch macros to global context for future use
         dispatch({ type: 'SET_MACROS', payload: data });
+        console.log(state.macros)
       } catch (error) {
         console.error('Error fetching macros:', error.response?.data || error.message);
         setMacros({ error: 'Failed to calculate macros. Please try again.' });
@@ -66,11 +67,19 @@ export default function MacroSummaryScreen({ navigation }) {
       </View>
 
       <TouchableOpacity
-        style={styles.acceptButton}
-        onPress={() => navigation.navigate('MainScreen')}
-      >
-        <Text style={styles.acceptText}>Accept</Text>
-      </TouchableOpacity>
+      style={styles.acceptButton}
+      onPress={() =>
+        navigation.navigate('MainScreen', {
+          newFood: {
+            name: 'Onboarding Macros', // You can use a placeholder name
+            calories: macros.calories,
+            macros: macros.macros,
+          },
+        })
+      }
+    >
+      <Text style={styles.acceptText}>Accept</Text>
+    </TouchableOpacity>
     </LinearGradient>
   );
 }
