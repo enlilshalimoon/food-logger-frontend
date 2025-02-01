@@ -351,6 +351,9 @@ PODS:
     - React-Core
   - react-native-safe-area-context (5.1.0):
     - React-Core
+  - react-native-slider (4.5.5):
+    - RCT-Folly (= 2021.07.22.00)
+    - React-Core
   - React-NativeModulesApple (0.72.17):
     - hermes-engine
     - React-callinvoker
@@ -529,6 +532,7 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - react-native-get-random-values (from `../node_modules/react-native-get-random-values`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
+  - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
@@ -630,6 +634,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-get-random-values"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
+  react-native-slider:
+    :path: "../node_modules/@react-native-community/slider"
   React-NativeModulesApple:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios"
   React-perflogger:
@@ -712,6 +718,7 @@ SPEC CHECKSUMS:
   React-logger: afa402da502a35728c9073804b1802861783a996
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
   react-native-safe-area-context: e134b241010ebe2aacdcea013565963d13826faa
+  react-native-slider: 938e4d2b89b5a3eb2800a7338943df1d99a5a541
   React-NativeModulesApple: a3b3019ffee56cf78bbf09c48e056072f3bb4ea4
   React-perflogger: 785b0063af5178298a61b54bb46aae9a19c7bbb5
   React-RCTActionSheet: 84f37b34bd77249263ace75471d6664393c29972

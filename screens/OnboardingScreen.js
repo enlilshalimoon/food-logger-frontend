@@ -57,6 +57,25 @@ export default function OnboardingScreen({ navigation }) {
     }
   };
 
+  const handleSkip = () => {
+    // Set default macros, calories, and initialize loggedFoods
+    dispatch({
+      type: "SET_MACROS",
+      payload: {
+        macros: { protein: 150, carbs: 200, fats: 50 }, // Default macros
+        calories: 2000, // Default calories
+      },
+    });
+  
+    dispatch({
+      type: "SET_LOGGED_FOODS",
+      payload: [], // Initialize logged foods
+    });
+  
+    // Navigate to MainScreen without route params
+    navigation.navigate("MainScreen");
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -83,6 +102,11 @@ export default function OnboardingScreen({ navigation }) {
             <Ionicons name="arrow-forward" size={28} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
+
+        {/* Skip Button */}
+        <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+          <Text style={styles.skipButtonText}>Skip Onboarding</Text>
+        </TouchableOpacity>
       </LinearGradient>
     </KeyboardAvoidingView>
   );
@@ -133,5 +157,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  skipButton: {
+    backgroundColor: '#FF6B6B',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginTop: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  skipButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

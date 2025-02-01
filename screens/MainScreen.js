@@ -1,99 +1,201 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { AppContext } from '../context/AppContext';
+import React, { useContext, useEffect, useState } from "react";
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import { AppContext } from "../context/AppContext";
+import { ThemeContext } from "../context/ThemeContext";
+import Swipeable from "react-native-gesture-handler/Swipeable";
+import { getMacrosFromText } from "../services/apiService";
 
 export default function MainScreen({ navigation, route }) {
   const { state, dispatch } = useContext(AppContext);
+  const { theme } = useContext(ThemeContext);
   const { macros, caloriesLeft } = state;
 
-  // If the Logging Screen or other flow returns a newly logged food,
-  // we can capture it from `route.params`.
-  // (Alternatively, you could store logged foods in context, too.)
   const [loggedFoods, setLoggedFoods] = useState([]);
+  const [manualFoodInput, setManualFoodInput] = useState("");
+  const [isAddingFood, setIsAddingFood] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Track API loading state
 
-  // On mount or whenever route params change, check if new food was passed
-// Effect to handle new food logging
-useEffect(() => {
-  console.log("New food received in MainScreen:", route.params?.newFood);
+  // Handle new food logging from route params
+  useEffect(() => {
+    if (route.params?.newFood) {
+      const { name, calories, macros } = route.params.newFood;
 
-  if (route.params?.newFood) {
-    const { name, calories, macros } = route.params.newFood;
-
-    // Check if this is not onboarding data to avoid logging it as a food item
-    if (name !== "Onboarding Macros") {
-      // Update logged foods
-      setLoggedFoods((prev) => [...prev, { name, calories }]);
-
-      // Dispatch action to update macros and calories in context
-      if (dispatch) {
-        dispatch({
-          type: "UPDATE_MACROS",
-          payload: {
-            foodCalories: calories,
-            foodMacros: macros,
-          },
-        });
+      if (name !== "Onboarding Macros") {
+        addFood({ name, calories, macros });
       }
     }
-  }
-}, [route.params?.newFood, dispatch]);
+  }, [route.params?.newFood]);
 
-// Effect to track changes in macros (for debugging or additional logic)
-useEffect(() => {
-  console.log("Updated macros in MainScreen:", macros);
+  // Add food to logged foods and update macros
+  const addFood = ({ name, calories, macros }) => {
+    setLoggedFoods((prev) => [...prev, { name, calories, macros }]);
+    dispatch({
+      type: "UPDATE_MACROS",
+      payload: { foodCalories: calories, foodMacros: macros },
+    });
+  };
 
-  // Add any other logic if needed to react to changes in `macros`
-}, [macros]);
+  // Handle removing food
+  const handleRemoveFood = (index) => {
+    const removedFood = loggedFoods[index];
+    setLoggedFoods((prev) => prev.filter((_, i) => i !== index));
+
+    dispatch({
+      type: "UPDATE_MACROS",
+      payload: {
+        foodCalories: -removedFood.calories,
+        foodMacros: {
+          protein: -removedFood.macros.protein,
+          carbs: -removedFood.macros.carbs,
+          fats: -removedFood.macros.fats,
+        },
+      },
+    });
+  };
+
+  // Handle manual food submission
+  const handleManualFoodSubmit = async () => {
+    const trimmedInput = manualFoodInput.trim();
+
+    if (!trimmedInput || isLoading) return;
+
+    setIsLoading(true); // Start loading
+
+    try {
+      // Call API to get macros from text
+      const response = await getMacrosFromText(trimmedInput);
+
+      if (response && Array.isArray(response)) {
+        response.forEach((item) => {
+          if (item.name && item.calories !== undefined && item.macros) {
+            addFood({
+              name: item.name,
+              calories: item.calories,
+              macros: item.macros,
+            });
+          } else {
+            console.warn("⚠️ Skipping invalid item:", item);
+          }
+        });
+      } else {
+        console.error("❌ Error: Invalid response format from backend.", response);
+      }
+    } catch (error) {
+      console.error("🔥 Error logging food:", error);
+    } finally {
+      setIsLoading(false); // Stop loading
+      setManualFoodInput("");
+      setIsAddingFood(false);
+    }
+  };
+
+  // Render swipe-to-delete action
+  const renderRightActions = (index) => (
+    <TouchableOpacity
+      style={[styles.deleteButton, { backgroundColor: theme.primary }]}
+      onPress={() => handleRemoveFood(index)}
+    >
+      <Ionicons name="trash" size={24} color="#fff" />
+    </TouchableOpacity>
+  );
+
+  // Render "Add Food" input
+  const renderAddFoodInput = () => (
+    <View style={styles.manualFoodEntry}>
+      <TextInput
+        style={[styles.textInput, { color: theme.text }]}
+        placeholder="Enter food description (e.g., sandwich with cheese)"
+        placeholderTextColor="#999"
+        value={isLoading ? "Loading..." : manualFoodInput} // Show "Loading..." during API call
+        onChangeText={setManualFoodInput}
+        multiline={true}  // Enables multiline input
+        textAlignVertical="top"  // Ensures text starts at the top
+        editable={!isLoading} // Disable typing while loading
+      />
+      <TouchableOpacity
+        style={[styles.enterButton, { backgroundColor: theme.primary }]}
+        onPress={handleManualFoodSubmit}
+        disabled={isLoading} // Disable button while loading
+      >
+        <Ionicons name="checkmark" size={20} color="#fff" />
+        <Text style={styles.enterButtonText}>
+          {isLoading ? "Processing..." : "Enter"}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
-    <LinearGradient colors={['#E3FDFD', '#C9E9F8']} style={styles.container}>
-
-      {/* Big "Calories Left" in top-left */}
-      <View style={styles.header}>
-        <Text style={styles.caloriesLeftLabel}>Calories Left</Text>
-        <Text style={styles.caloriesLeftValue}>
-          {caloriesLeft ?? macros?.calories ?? 0}
-        </Text>
+    <LinearGradient colors={theme.backgroundGradient} style={styles.container}>
+      {/* Top Row: Menu on Left, Profile on Right */}
+      <View style={styles.headerTopRow}>
+        <TouchableOpacity style={styles.menuButton} onPress={() => console.log("Menu pressed")}>
+          <Ionicons name="menu" size={28} color={theme.primary} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate("ProfileScreen")}>
+          <Ionicons name="person-circle-outline" size={28} color={theme.primary} />
+        </TouchableOpacity>
       </View>
 
-      {/* Middle Card: Display foods logged (or other info) */}
-      <View style={styles.middleCard}>
-        <Text style={styles.cardTitle}>Food Logged</Text>
-        {loggedFoods.length === 0 ? (
-          <Text style={styles.placeholderText}>
-            No foods logged yet.
+      {/* Second Row: Calories on Left, Macros on Right */}
+      <View style={styles.headerSecondRow}>
+        <View style={styles.caloriesContainer}>
+          <Text style={[styles.caloriesLeftLabel, { color: theme.primary }]}>Calories Left</Text>
+          <Text style={[styles.caloriesLeftValue, { color: theme.text }]}>
+            {caloriesLeft ?? macros?.calories ?? 0}
           </Text>
-        ) : (
-          <ScrollView style={{ maxHeight: 200 }}>
-            {loggedFoods.map((food, index) => (
-              <Text key={index} style={styles.loggedFoodText}>
-                • {food.name || 'Unknown'} - {food.calories} cal
-              </Text>
-            ))}
-          </ScrollView>
-        )}
+        </View>
+        <View style={styles.macrosContainer}>
+          <Text style={[styles.macrosTitle, { color: theme.primary }]}>Your Macros</Text>
+          <Text style={[styles.macrosText, { color: theme.text }]}>Protein: {macros.protein || 0}g</Text>
+          <Text style={[styles.macrosText, { color: theme.text }]}>Carbs: {macros.carbs || 0}g</Text>
+          <Text style={[styles.macrosText, { color: theme.text }]}>Fats: {macros.fats || 0}g</Text>
+        </View>
       </View>
 
-      {/* Optionally show macros (if you'd like) */}
-      {macros && (
-        <View style={styles.macrosCard}>
-          <Text style={styles.macrosTitle}>Your Macros</Text>
-          <Text style={styles.macrosText}>Protein: {macros.protein || 0}g</Text>
-          <Text style={styles.macrosText}>Carbs: {macros.carbs || 0}g</Text>
-          <Text style={styles.macrosText}>Fats: {macros.fats || 0}g</Text>
-        </View>
-      )}
+      {/* Food Logged Section */}
+      <View style={styles.loggedFoodsSection}>
+        <Text style={[styles.loggedFoodsTitle, { color: theme.primary }]}>Logged Foods</Text>
 
-      {/* Footer / "Log Food" button */}
-      <View style={styles.footer}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          {loggedFoods.map((food, index) => (
+            <Swipeable key={index} renderRightActions={() => renderRightActions(index)}>
+              <View style={styles.foodRow}>
+                <Text style={[styles.foodName, { color: theme.text }]}>{food.name}</Text>
+                <Text style={[styles.foodCalories, { color: theme.text }]}>{food.calories} cal</Text>
+              </View>
+            </Swipeable>
+          ))}
+
+          {/* Add Food Button (Moves with List) */}
+          {isAddingFood ? (
+            renderAddFoodInput()
+          ) : (
+            <TouchableOpacity
+              style={[styles.addFoodButton, { backgroundColor: theme.primary, marginTop: 20 }]}
+              onPress={() => setIsAddingFood(true)}
+            >
+              <Ionicons name="add" size={24} color="#fff" />
+              <Text style={styles.addFoodButtonText}>Add Food</Text>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+
+        {/* Restore Camera Button at the Bottom Center */}
         <TouchableOpacity
-          style={styles.logFoodButton}
-          onPress={() => navigation.navigate('CameraScreen')}
+          style={[styles.cameraButton, { backgroundColor: theme.primary }]}
+          onPress={() => navigation.navigate("CameraScreen")}
         >
-          <Ionicons name="camera" size={24} color="#fff" />
-          <Text style={styles.logFoodButtonText}> Log Food</Text>
+          <Ionicons name="camera" size={32} color="white" />
         </TouchableOpacity>
       </View>
     </LinearGradient>
@@ -104,90 +206,119 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
+    paddingTop: 50,
   },
-  header: {
-    marginTop: 60,
-    alignItems: 'flex-start',
+  headerTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 20,
+  },
+  menuButton: {
+    padding: 5,
+  },
+  profileButton: {
+    padding: 5,
+  },
+  headerSecondRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  caloriesContainer: {},
+  macrosContainer: {
+    alignItems: "flex-end",
   },
   caloriesLeftLabel: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#6A67CE',
+    fontWeight: "bold",
   },
   caloriesLeftValue: {
     fontSize: 34,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 4,
-  },
-  middleCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
-    // Shadows
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#6A67CE',
-    marginBottom: 10,
-  },
-  placeholderText: {
-    fontSize: 16,
-    color: '#555',
-  },
-  loggedFoodText: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 5,
-  },
-  macrosCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
-    // Shadows
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    fontWeight: "bold",
   },
   macrosTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#6A67CE',
-    marginBottom: 10,
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 2,
   },
   macrosText: {
+    fontSize: 14,
+  },
+  loggedFoodsSection: {
+    flex: 1,
+    marginTop: 10,
+    paddingBottom: 20, // Adds spacing so the button doesn’t stick to the last item
+  },
+  loggedFoodsTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  foodRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+  },
+  foodName: {
     fontSize: 16,
-    color: '#333',
-    marginBottom: 5,
   },
-  footer: {
-    marginTop: 'auto',
-    marginBottom: 40,
-    alignItems: 'center',
+  foodCalories: {
+    fontSize: 16,
   },
-  logFoodButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#6A67CE',
+  manualFoodEntry: {
+    marginVertical: 10,
+    borderRadius: 10,
+    backgroundColor: "#f2f2f2",
+    padding: 10,
+  },
+  textInput: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+    paddingVertical: 5,
+    fontSize: 16,
+  },
+  enterButton: {
+    marginTop: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 10,
+    borderRadius: 5,
+  },
+  enterButtonText: {
+    marginLeft: 5,
+    fontSize: 16,
+    color: "#fff",
+  },
+  addFoodButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 18,
     paddingVertical: 12,
     borderRadius: 20,
+    marginTop: 20,
   },
-  logFoodButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 6,
+  cameraButton: {
+    position: "absolute",
+    bottom: 80, // Adjust to position correctly above the Add Food button
+    alignSelf: "center",
+    padding: 15,
+    borderRadius: 50,
+    elevation: 5, // Shadow effect for iOS/Android
+  },
+  addFoodButtonText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  deleteButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 75,
   },
 });

@@ -9,25 +9,24 @@ export default function MacroSummaryScreen({ navigation }) {
   const { onboardingResponses } = state; // Extract responses from context
   const [macros, setMacros] = useState(null); // Store macros data
   const [loading, setLoading] = useState(true); // Loading state
-
+  
   useEffect(() => {
     console.log('Received onboarding responses from context:', onboardingResponses);
-
+  
     if (!onboardingResponses || Object.keys(onboardingResponses).length === 0) {
       console.error('No onboarding responses found in context');
       setMacros({ error: 'No onboarding responses found. Please restart the onboarding process.' });
       setLoading(false);
       return;
     }
-
+  
     const fetchMacros = async () => {
       try {
         const data = await calculateMacros(onboardingResponses); // Use centralized service
         setMacros(data); // Save macros data
-
+  
         // Dispatch macros to global context for future use
-        dispatch({ type: 'SET_MACROS', payload: data });
-        console.log(state.macros)
+        dispatch({ type: 'SET_INITIAL_MACROS', payload: data });
       } catch (error) {
         console.error('Error fetching macros:', error.response?.data || error.message);
         setMacros({ error: 'Failed to calculate macros. Please try again.' });
@@ -35,7 +34,7 @@ export default function MacroSummaryScreen({ navigation }) {
         setLoading(false); // Stop loading
       }
     };
-
+  
     fetchMacros();
   }, [onboardingResponses, dispatch]);
 
